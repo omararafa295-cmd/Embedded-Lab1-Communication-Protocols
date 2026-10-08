@@ -1,76 +1,9 @@
 #include <Arduino.h>
-#include <avr/io.h>
-#include <stdint.h>
+
+#include "USART_Driver.h"
+#include "SPI_Driver.h"
 
 #define PACKET_START 0xAA
-
-void USART_init()
-{
-  UCSRA &= ~(1 << U2X);
-
-  UBRRH = 0;
-  UBRRL = 51;
-
-  UCSRB =
-    (1 << RXEN) |
-    (1 << TXEN);
-
-  UCSRC =
-    (1 << URSEL) |
-    (1 << UCSZ1) |
-    (1 << UCSZ0);
-}
-
-void USART_send(uint8_t data)
-{
-  while (!(UCSRA & (1 << UDRE)))
-  {
-  }
-
-  UDR = data;
-}
-
-void USART_sendString(const char *str)
-{
-  while (*str != '\0')
-  {
-    USART_send(*str);
-    str++;
-  }
-}
-
-void USART_send2Digits(uint8_t value)
-{
-  USART_send(
-    '0' + (value / 10)
-  );
-
-  USART_send(
-    '0' + (value % 10)
-  );
-}
-
-void SPI_Init()
-{
-  DDRB &= ~(
-    (1 << PB4) |
-    (1 << PB5) |
-    (1 << PB7)
-  );
-
-  DDRB |= (1 << PB6);
-
-  SPCR = (1 << SPE);
-}
-
-uint8_t SPI_ReceiveData()
-{
-  while (!(SPSR & (1 << SPIF)))
-  {
-  }
-
-  return SPDR;
-}
 
 void printDateTime(
   uint8_t day,
@@ -90,7 +23,6 @@ void printDateTime(
   USART_send('/');
 
   USART_sendString("20");
-
   USART_send2Digits(year);
 
   USART_sendString("   Time: ");
@@ -144,15 +76,11 @@ void loop()
   }
 
   day = SPI_ReceiveData();
-
   month = SPI_ReceiveData();
-
   year = SPI_ReceiveData();
 
   hour = SPI_ReceiveData();
-
   minute = SPI_ReceiveData();
-
   second = SPI_ReceiveData();
 
   receivedChecksum =
