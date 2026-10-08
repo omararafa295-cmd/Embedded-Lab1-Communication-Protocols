@@ -23,6 +23,12 @@ DS1307 RTC -> I2C -> Arduino UNO -> SPI -> ATmega32 -> UART -> Virtual Terminal
 | SPI | Arduino UNO -> ATmega32 |
 | UART | ATmega32 -> Virtual Terminal |
 
+The project demonstrates three communication protocols:
+
+- I2C
+- SPI
+- UART
+
 ## System Architecture
 
 ```text
@@ -56,7 +62,7 @@ DS1307 RTC -> I2C -> Arduino UNO -> SPI -> ATmega32 -> UART -> Virtual Terminal
 ## How the System Works
 
 1. The Arduino UNO communicates with the DS1307 RTC through I2C.
-2. The Arduino reads day, month, year, hour, minute, and second.
+2. The Arduino reads the day, month, year, hour, minute, and second.
 3. The values are packed into an SPI frame.
 4. Arduino UNO acts as the SPI Master.
 5. ATmega32 acts as the SPI Slave.
@@ -67,15 +73,21 @@ DS1307 RTC -> I2C -> Arduino UNO -> SPI -> ATmega32 -> UART -> Virtual Terminal
 
 ## SPI Packet Format
 
+The Arduino sends the following frame:
+
 ```text
 [0xAA][DAY][MONTH][YEAR][HOUR][MINUTE][SECOND][CHECKSUM]
 ```
 
 `0xAA` is used as the packet start byte.
 
+The checksum is calculated using XOR:
+
 ```text
 Checksum = Day ^ Month ^ Year ^ Hour ^ Minute ^ Second
 ```
+
+The ATmega32 recalculates the checksum before displaying the received data.
 
 ## Wiring
 
@@ -105,6 +117,8 @@ Two 4.7 kOhm pull-up resistors are connected to SDA and SCL.
 |----------|------------------|
 | PD1 / TXD | RXD |
 
+UART configuration:
+
 ```text
 Baud Rate : 9600
 Data Bits : 8
@@ -114,6 +128,8 @@ Stop Bits : 1
 
 ## ATmega32 Configuration
 
+The ATmega32 project is compiled using MightyCore.
+
 ```text
 MCU        : ATmega32
 Clock      : Internal 8 MHz
@@ -122,7 +138,7 @@ Bootloader : No Bootloader
 JTAG       : Disabled
 ```
 
-Proteus:
+Proteus configuration:
 
 ```text
 Clock Frequency : 8 MHz
@@ -145,12 +161,14 @@ USART_Driver.cpp
 Main functions:
 
 ```cpp
-USART_Init();
-USART_Send();
-USART_Receive();
-USART_SendString();
-USART_Send2Digits();
+USART_init();
+USART_send();
+USART_receive();
+USART_sendString();
+USART_send2Digits();
 ```
+
+The USART driver directly configures the ATmega32 UART registers and provides reusable functions for serial communication.
 
 ### SPI Driver
 
@@ -171,7 +189,7 @@ SPI_SendReceiveData();
 
 `SPI_ReceiveData()` is used by the final mini project because the ATmega32 works as an SPI slave receiving data from the Arduino UNO.
 
-`SPI_SendReceiveData()` is also implemented as part of the complete SPI driver functionality.
+`SPI_SendReceiveData()` is also implemented as part of the complete SPI driver functionality required by the lab.
 
 ## Project Structure
 
@@ -179,14 +197,16 @@ SPI_SendReceiveData();
 Embedded-Lab1-Communication-Protocols/
 |
 ├── Arduino_Master/
-|   └── RTC_Arduino_Master.ino
+|   └── RTC_Arduino_Master/
+|       └── RTC_Arduino_Master.ino
 |
 ├── ATmega32_Slave/
-|   ├── ATmega32_SPI_Slave.ino
-|   ├── USART_Driver.h
-|   ├── USART_Driver.cpp
-|   ├── SPI_Driver.h
-|   └── SPI_Driver.cpp
+|   └── ATmega32_SPI_Slave/
+|       ├── ATmega32_SPI_Slave.ino
+|       ├── USART_Driver.h
+|       ├── USART_Driver.cpp
+|       ├── SPI_Driver.h
+|       └── SPI_Driver.cpp
 |
 ├── Proteus/
 |   └── Lab1_Communication_Protocols.pdsprj
@@ -205,6 +225,8 @@ Embedded-Lab1-Communication-Protocols/
 ## Simulation Result
 
 ![Virtual Terminal Result](Screenshots/VirtualTerminal.png)
+
+The Virtual Terminal displays the date and time received from the RTC through the complete communication chain.
 
 Example output:
 
